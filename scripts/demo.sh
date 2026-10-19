@@ -4,19 +4,29 @@
 #   bash scripts/demo.sh             (BASE_URL defaults to http://localhost:3000)
 # Uses curl and node (for JSON field extraction). Works best on a fresh database with the
 # default reward rule (every 5th order, 10%).
+# Portable: only POSIX/BSD-compatible tool flags, so it runs on macOS's default bash 3.2 too.
 set -euo pipefail
 BASE_URL=${BASE_URL:-http://localhost:3000}
 JSON='content-type: application/json'
 
-field() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const v=process.argv[1].split(".").reduce((o,k)=>o?.[k],JSON.parse(s));console.log(typeof v==="object"?JSON.stringify(v):v)})' "$1"; }
+for tool in curl node; do
+  command -v "$tool" >/dev/null || { echo "demo.sh needs '$tool' on PATH" >&2; exit 1; }
+done
+if ! curl -sf "$BASE_URL/health" >/dev/null; then
+  echo "API not reachable at $BASE_URL (start it with: docker compose up --build)" >&2
+  exit 1
+fi
+
+field() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{let j;try{j=JSON.parse(s)}catch{console.error("expected JSON, got: "+JSON.stringify(s.slice(0,200)));process.exit(1)}const v=process.argv[1].split(".").reduce((o,k)=>o?.[k],j);console.log(typeof v==="object"?JSON.stringify(v):v)})' "$1"; }
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
-call() { # method path [body] [extra curl args...] -> prints "STATUS body"
+call() { # method path [body] [extra curl args...] -> prints body, then the HTTP status on its own last line
   local method=$1 path=$2 body=${3:-}; shift 3 || shift $#
   if [[ -n "$body" ]]; then curl -s -X "$method" "$BASE_URL$path" -H "$JSON" -d "$body" -w '\n%{http_code}' "$@"
   else curl -s -X "$method" "$BASE_URL$path" -w '\n%{http_code}' "$@"; fi
 }
-show() { local out; out=$(cat); echo "HTTP $(tail -n1 <<<"$out")  $(head -n -1 <<<"$out" | head -c 400)"; }
-body() { head -n -1; }
+# sed '$d' drops the status line; unlike `head -n -1` it works with BSD (macOS) tools.
+show() { local out; out=$(cat); echo "HTTP $(tail -n1 <<<"$out")  $(sed '$d' <<<"$out" | head -c 400)"; }
+body() { sed '$d'; }
 
 say "Catalogue"
 call GET /products | body | field items | head -c 600; echo
@@ -34,7 +44,7 @@ call POST "/carts/$CART/items" '{"productId":"sneaker-ltd","quantity":99}' | sho
 say "Checkout without an Idempotency-Key is refused"
 call POST "/carts/$CART/checkout" "" | show
 
-KEY="demo-$(date +%s%N)"
+KEY="demo-$(date +%s)-$$-$RANDOM"
 say "Checkout with Idempotency-Key $KEY"
 call POST "/carts/$CART/checkout" "" -H "Idempotency-Key: $KEY" | show
 say "Retry with the same key: same order replayed (see Idempotent-Replayed header), nothing charged twice"
