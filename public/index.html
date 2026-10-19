@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkout Demo</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --bg: #f7f7f5;
+        --panel: #ffffff;
+        --text: #1d1d1b;
+        --muted: #6b6b66;
+        --border: #e2e2dc;
+        --accent: #2f5bd3;
+        --ok: #1f7a4d;
+        --warn: #a15c00;
+        --err: #b3261e;
+        --code: #f0f0ec;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #141413;
+          --panel: #1d1d1b;
+          --text: #ececea;
+          --muted: #a3a39d;
+          --border: #34342f;
+          --accent: #8aa8ff;
+          --ok: #6fd3a0;
+          --warn: #f0b35a;
+          --err: #ff8a80;
+          --code: #262623;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.45 system-ui,
+          sans-serif;
+      }
+      header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      header p {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+      main {
+        display: grid;
+        gap: 16px;
+        padding: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px;
+        min-width: 0;
+      }
+      h2 {
+        margin: 0 0 10px;
+        font-size: 15px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 5px 4px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      input {
+        font: inherit;
+        padding: 4px 6px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      input[type='number'] {
+        width: 64px;
+      }
+      button {
+        font: inherit;
+        padding: 4px 10px;
+        border: 1px solid var(--accent);
+        border-radius: 4px;
+        background: transparent;
+        color: var(--accent);
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--accent);
+        color: var(--panel);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin: 8px 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .ok {
+        color: var(--ok);
+      }
+      .warn {
+        color: var(--warn);
+      }
+      .err {
+        color: var(--err);
+      }
+      pre {
+        background: var(--code);
+        padding: 8px;
+        border-radius: 4px;
+        overflow: auto;
+        max-height: 320px;
+        font-size: 12px;
+        margin: 8px 0 0;
+      }
+      .totals {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 2px 12px;
+        justify-content: end;
+        margin-top: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+      .totals span:nth-child(odd) {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Reliable Checkout &amp; Rewards</h1>
+      <p>
+        A thin client over the API. Every call and its raw response is shown in the log. API docs at
+        <a href="/docs">/docs</a>.
+      </p>
+    </header>
+    <main>
+      <section>
+        <h2>Catalogue</h2>
+        <table id="catalogue"></table>
+      </section>
+
+      <section>
+        <h2>Cart</h2>
+        <div class="row">
+          <button id="new-cart">New cart</button>
+          <span class="muted" id="cart-id">No cart yet</span>
+        </div>
+        <table id="cart"></table>
+        <div class="totals" id="cart-totals"></div>
+        <div id="cart-issues"></div>
+        <div class="row">
+          <button id="ack">Accept current prices</button>
+        </div>
+        <div class="row">
+          <input id="coupon" placeholder="Coupon code" />
+          <button id="preview">Preview</button>
+          <button id="checkout" class="primary">Checkout</button>
+          <button id="retry" title="Resend the last checkout with the same Idempotency-Key">
+            Retry same request
+          </button>
+        </div>
+        <div id="order"></div>
+      </section>
+
+      <section>
+        <h2>Admin</h2>
+        <div class="row">
+          <button id="gen">Generate coupon</button>
+          <button id="report-btn">Refresh report</button>
+          <button id="coupons-btn">List coupons</button>
+        </div>
+        <div class="row">
+          <input id="adm-product" placeholder="product id" size="10" />
+          <input id="adm-price" type="number" placeholder="price paise" style="width: 110px" />
+          <input id="adm-stock" type="number" placeholder="stock ±" style="width: 80px" />
+          <button id="adm-apply">Apply</button>
+        </div>
+        <div id="report"></div>
+        <h2 style="margin-top: 14px">Race demo</h2>
+        <div class="row">
+          <input id="race-n" type="number" value="10" min="1" max="30" />
+          <span>buyers race for</span>
+          <input id="race-product" value="sneaker-ltd" size="10" />
+          <button id="race">Run</button>
+        </div>
+        <div id="race-result" class="muted"></div>
+      </section>
+
+      <section style="grid-column: 1 / -1">
+        <h2>Request log</h2>
+        <pre id="log">Ready.</pre>
+      </section>
+    </main>
+
+    <script>
+      // Display only. Money stays in integer paise; formatting uses integer maths too.
+      const inr = (paise) => {
+        const sign = paise < 0 ? '-' : '';
+        const p = Math.abs(paise);
+        const rupees = Math.floor(p / 100).toLocaleString('en-IN');
+        return `${sign}₹${rupees}.${String(p % 100).padStart(2, '0')}`;
+      };
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+      const state = { cartId: null, lastCheckout: null };
+      const logLines = [];
+
+      async function api(method, url, body, headers = {}) {
+        const init = { method, headers: { ...headers } };
+        if (body !== undefined) {
+          init.headers['content-type'] = 'application/json';
+          init.body = JSON.stringify(body);
+        }
+        const res = await fetch(url, init);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+        const replay = res.headers.get('idempotent-replayed') ? '  (Idempotent-Replayed)' : '';
+        logLines.unshift(
+          `${method} ${url} -> ${res.status}${replay}\n${JSON.stringify(data, null, 2)}`,
+        );
+        $('log').textContent = logLines.slice(0, 15).join('\n\n');
+        return { status: res.status, data, replayed: Boolean(replay) };
+      }
+
+      async function loadCatalogue() {
+        const { data } = await api('GET', '/products');
+        $('catalogue').innerHTML =
+          '<tr><th>Product</th><th class="num">Price</th><th class="num">Stock</th><th></th></tr>' +
+          data.items
+            .map(
+              (p) => `<tr><td>${esc(p.name)}<br><span class="muted">${esc(p.id)}</span></td>
+                <td class="num">${inr(p.unitPricePaise)}</td><td class="num">${p.stock}</td>
+                <td><input type="number" min="1" max="100" value="1" id="q-${esc(p.id)}">
+                <button data-add="${esc(p.id)}">Add</button></td></tr>`,
+            )
+            .join('');
+      }
+
+      function renderCart(cart) {
+        $('cart-id').textContent = `${cart.id} · ${cart.status}`;
+        $('cart').innerHTML =
+          '<tr><th>Item</th><th class="num">Unit</th><th>Qty</th><th class="num">Line</th><th></th></tr>' +
+          cart.items
+            .map(
+              (
+                i,
+              ) => `<tr><td>${esc(i.name)}${i.priceChanged ? ` <span class="warn">was ${inr(i.acknowledgedUnitPricePaise)}</span>` : ''}
+                ${i.sufficientStock ? '' : ` <span class="err">only ${i.availableStock} left</span>`}</td>
+                <td class="num">${inr(i.unitPricePaise)}</td>
+                <td><input type="number" min="1" max="100" value="${i.quantity}" data-set="${esc(i.productId)}"></td>
+                <td class="num">${inr(i.lineTotalPaise)}</td>
+                <td><button data-del="${esc(i.productId)}">×</button></td></tr>`,
+            )
+            .join('');
+        const preview = cart.couponPreview;
+        $('cart-totals').innerHTML =
+          `<span>Items</span><span>${cart.itemCount}</span><span>Subtotal</span><span>${inr(cart.subtotalPaise)}</span>` +
+          (preview
+            ? `<span>Coupon ${esc(preview.code)}</span><span class="${preview.status === 'APPLICABLE' ? 'ok' : 'err'}">${preview.status === 'APPLICABLE' ? '-' + inr(preview.discountPaise) : preview.status}</span>
+               <span>Estimated total</span><span>${inr(preview.estimatedTotalPaise)}</span>`
+            : '');
+        $('cart-issues').innerHTML = cart.issues
+          .map((i) => `<div class="warn">${esc(i.code)}: ${esc(i.productId)}</div>`)
+          .join('');
+      }
+
+      async function refreshCart(couponCode) {
+        if (!state.cartId) return;
+        const q = couponCode ? `?couponCode=${encodeURIComponent(couponCode)}` : '';
+        const { status, data } = await api('GET', `/carts/${state.cartId}${q}`);
+        if (status === 200) renderCart(data);
+      }
+
+      async function ensureCart() {
+        if (!state.cartId) {
+          const { data } = await api('POST', '/carts');
+          state.cartId = data.id;
+          renderCart(data);
+        }
+        return state.cartId;
+      }
+
+      function renderOrder(res) {
+        if (res.status !== 201) {
+          $('order').innerHTML =
+            `<p class="err">${res.status} ${esc(res.data.code)}: ${esc(res.data.detail)}</p>`;
+          return;
+        }
+        const o = res.data;
+        $('order').innerHTML =
+          `<p class="ok">Order ${esc(o.id)} placed${res.replayed ? ' (replayed, no new order)' : ''}</p>
+          <div class="totals"><span>Subtotal</span><span>${inr(o.subtotalPaise)}</span>
+          <span>Discount${o.coupon ? ` (${esc(o.coupon.code)}, ${o.coupon.discountPercent}%)` : ''}</span><span>-${inr(o.discountPaise)}</span>
+          <span>Total</span><span>${inr(o.totalPaise)}</span></div>`;
+      }
+
+      async function sendCheckout(attempt) {
+        const res = await api('POST', `/carts/${attempt.cartId}/checkout`, attempt.body, {
+          'Idempotency-Key': attempt.key,
+        });
+        renderOrder(res);
+        await Promise.all([refreshCart(), loadCatalogue()]);
+      }
+
+      document.addEventListener('click', async (e) => {
+        const add = e.target.dataset?.add;
+        const del = e.target.dataset?.del;
+        if (add) {
+          const cartId = await ensureCart();
+          const quantity = Number($(`q-${add}`).value);
+          const { status, data } = await api('POST', `/carts/${cartId}/items`, {
+            productId: add,
+            quantity,
+          });
+          if (status === 200) renderCart(data);
+        } else if (del) {
+          const { data } = await api('DELETE', `/carts/${state.cartId}/items/${del}`);
+          renderCart(data);
+        }
+      });
+      document.addEventListener('change', async (e) => {
+        const productId = e.target.dataset?.set;
+        if (!productId) return;
+        const { status, data } = await api('PUT', `/carts/${state.cartId}/items/${productId}`, {
+          quantity: Number(e.target.value),
+        });
+        if (status === 200) renderCart(data);
+        else refreshCart();
+      });
+
+      $('new-cart').onclick = async () => {
+        state.cartId = null;
+        $('order').innerHTML = '';
+        await ensureCart();
+      };
+      $('ack').onclick = async () => {
+        if (!state.cartId) return;
+        const { status, data } = await api('POST', `/carts/${state.cartId}/acknowledge-prices`);
+        if (status === 200) renderCart(data);
+      };
+      $('preview').onclick = () => refreshCart($('coupon').value.trim());
+      $('checkout').onclick = async () => {
+        if (!state.cartId) return;
+        const coupon = $('coupon').value.trim();
+        // A fresh key per deliberate attempt; "Retry" reuses it like a client after a timeout.
+        state.lastCheckout = {
+          cartId: state.cartId,
+          key: crypto.randomUUID(),
+          body: coupon ? { couponCode: coupon } : undefined,
+        };
+        await sendCheckout(state.lastCheckout);
+      };
+      $('retry').onclick = () => state.lastCheckout && sendCheckout(state.lastCheckout);
+
+      async function loadReport() {
+        const { data: r } = await api('GET', '/admin/report');
+        $('report').innerHTML = `<div class="totals">
+            <span>Orders</span><span>${r.totalOrders}</span>
+            <span>Gross</span><span>${inr(r.grossRevenuePaise)}</span>
+            <span>Discounts</span><span>-${inr(r.totalDiscountsPaise)}</span>
+            <span>Net</span><span>${inr(r.netRevenuePaise)}</span>
+            <span>Coupons gen / avail / used</span><span>${r.coupons.generated} / ${r.coupons.available} / ${r.coupons.redeemed}</span>
+            <span>Next coupon at</span><span>${r.rewards.nextMilestoneAt} orders (every ${r.rewards.everyNOrders}, ${r.rewards.discountPercent}%)</span>
+          </div>
+          <table><tr><th>Product</th><th class="num">Sold</th><th class="num">Gross</th></tr>
+          ${r.products.map((p) => `<tr><td>${esc(p.productId)}</td><td class="num">${p.quantitySold}</td><td class="num">${inr(p.grossRevenuePaise)}</td></tr>`).join('')}
+          </table>`;
+      }
+      $('report-btn').onclick = loadReport;
+      $('gen').onclick = async () => {
+        const { status, data } = await api('POST', '/admin/coupons');
+        if (status === 201) $('coupon').value = data.code;
+        await loadReport();
+      };
+      $('coupons-btn').onclick = () => api('GET', '/admin/coupons');
+      $('adm-apply').onclick = async () => {
+        const body = {};
+        if ($('adm-price').value) body.pricePaise = Number($('adm-price').value);
+        if ($('adm-stock').value) body.stockAdjustment = Number($('adm-stock').value);
+        await api(
+          'PATCH',
+          `/admin/products/${encodeURIComponent($('adm-product').value.trim())}`,
+          body,
+        );
+        await Promise.all([loadCatalogue(), refreshCart()]);
+      };
+
+      $('race').onclick = async () => {
+        const n = Number($('race-n').value);
+        const productId = $('race-product').value.trim();
+        $('race-result').textContent = 'Preparing carts…';
+        const carts = [];
+        for (let i = 0; i < n; i++) {
+          const { data: cart } = await api('POST', '/carts');
+          // PUT is allowed to fail here if stock is already gone; the race shows the rest.
+          await api('PUT', `/carts/${cart.id}/items/${productId}`, { quantity: 1 });
+          carts.push(cart.id);
+        }
+        $('race-result').textContent = `Firing ${n} checkouts at once…`;
+        const results = await Promise.all(
+          carts.map((id) =>
+            api('POST', `/carts/${id}/checkout`, undefined, {
+              'Idempotency-Key': crypto.randomUUID(),
+            }),
+          ),
+        );
+        const tally = {};
+        for (const r of results) {
+          const label = r.status === 201 ? '201 placed' : `${r.status} ${r.data.code}`;
+          tally[label] = (tally[label] ?? 0) + 1;
+        }
+        $('race-result').textContent = Object.entries(tally)
+          .map(([k, v]) => `${v} × ${k}`)
+          .join(' · ');
+        await loadCatalogue();
+      };
+
+      loadCatalogue();
+      loadReport();
+    </script>
+  </body>
+</html>

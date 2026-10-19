@@ -1,3 +1,4 @@
+import fastifyStatic from '@fastify/static';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -7,6 +8,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import { fileURLToPath } from 'node:url';
 import type { AppConfig } from './config.js';
 import type { Db } from './db/database.js';
 import { AppError } from './domain/errors.js';
@@ -80,6 +82,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(fastifySwaggerUi, { routePrefix: '/docs' });
 
   app.get('/health', { schema: { hide: true } }, async () => ({ status: 'ok' }));
+
+  // Tiny demo client at / (resolves to <repo>/public from both src/ and dist/).
+  await app.register(fastifyStatic, {
+    root: fileURLToPath(new URL('../public', import.meta.url)),
+    wildcard: false,
+  });
 
   await app.register(productRoutes(new ProductService(deps.db)));
   await app.register(cartRoutes(new CartService(deps.db)));

@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: checkout
     ports:
-      - '5432:5432'
+      # Override with DB_PORT=55432 if a local Postgres already uses 5432.
+      - '${DB_PORT:-5432}:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d checkout']
       interval: 2s
@@ -24,4 +25,4 @@ services:
       REWARD_DISCOUNT_PERCENT: ${REWARD_DISCOUNT_PERCENT:-10}
       SEED_ON_START: 'true'
     ports:
-      - '3000:3000'
+      - '${API_PORT:-3000}:3000'
