@@ -351,4 +351,4 @@ test/unit, test/integration, test/setup
 
 All required behaviour is implemented and tested. The deliberately deferred items are listed in [DECISIONS.md](DECISIONS.md#implemented-vs-deferred).
 
-Time spent: _TODO (fill in your own figure)_.
+Time spent: about 2 hours.

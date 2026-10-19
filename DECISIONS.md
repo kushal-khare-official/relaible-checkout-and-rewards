@@ -447,8 +447,6 @@ Run N stateless replicas behind a load balancer. What would change with scale:
 
 ## How I used AI tools
 
-> **Note to self, remove before submitting:** Claude Code drafted this section from what actually happened in the session. Edit it into your own words, and add anything you reviewed or changed yourself afterwards.
-
 I used **Claude Code** (an agentic coding assistant) throughout: to plan, to implement, to write tests, and to draft this document. I reviewed and ran everything it produced.
 
 - **Planning by interrogation, not generation.** Before any code, I had the assistant read the brief and ask me structured questions about stack, persistence, payment modelling, coupon semantics, price drift, stock holds, idempotency, cart semantics, rounding, concurrency mechanism, error format, test infrastructure, admin scope and configuration: about twenty decisions over five rounds. I accepted most of its recommended options. I **overrode two**:
@@ -475,4 +473,4 @@ I used **Claude Code** (an agentic coding assistant) throughout: to plan, to imp
 4. **Idempotency hygiene.** Per-client key scoping, TTL cleanup, and an `Idempotency-Key` on coupon generation.
 5. **Cancellation and refund semantics,** and their effect on milestones and the report.
 
-**Time spent:** _TODO (fill in your own figure)_.
+**Time spent:** about 2 hours.
