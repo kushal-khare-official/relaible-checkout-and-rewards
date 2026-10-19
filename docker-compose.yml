@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: checkout
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d checkout']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/checkout
+      REWARD_EVERY_N_ORDERS: ${REWARD_EVERY_N_ORDERS:-5}
+      REWARD_DISCOUNT_PERCENT: ${REWARD_DISCOUNT_PERCENT:-10}
+      SEED_ON_START: 'true'
+    ports:
+      - '3000:3000'
