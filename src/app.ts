@@ -5,9 +5,11 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type { AppConfig } from './config.js';
+import type { Db } from './db/database.js';
 
 export interface AppDeps {
   config: AppConfig;
+  db: Db;
   logger?: boolean | { level: string };
 }
 
