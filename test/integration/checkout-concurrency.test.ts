@@ -6,6 +6,7 @@ import {
   createHarness,
   json,
   resetHarness,
+  sleep,
   statusCounts,
   stockOf,
   type TestHarness,
@@ -89,6 +90,31 @@ describe('concurrent checkouts never oversell', () => {
     expect(statusCounts(responses)).toEqual({ 201: 3, 409: 9 });
     expect(await stockOf(h.db, 'sneaker-ltd')).toBe(0);
     expect(await stockOf(h.db, 'tee')).toBe(97);
+  });
+
+  it('does not make shoppers wait while the same product is being checked out', async () => {
+    // Adding a cart line takes a KEY SHARE lock on the product (foreign key check). Checkout
+    // only changes stock, so it locks products FOR NO KEY UPDATE, which does not conflict.
+    const buying = await createCart(h.app, { tee: 1 });
+    const browsing = json(await h.app.inject({ method: 'POST', url: '/carts' })).id;
+    h.hooks.afterProductsLocked = () => sleep(300);
+    const finished: string[] = [];
+
+    const slowCheckout = checkout(h.app, buying, `k-${buying}`).then((r) => {
+      finished.push('checkout');
+      return r;
+    });
+    await sleep(50); // the checkout now holds the tee row lock
+    const add = await h.app
+      .inject({ method: 'PUT', url: `/carts/${browsing}/items/tee`, payload: { quantity: 1 } })
+      .then((r) => {
+        finished.push('add');
+        return r;
+      });
+
+    expect(add.statusCode).toBe(200);
+    expect((await slowCheckout).statusCode).toBe(201);
+    expect(finished).toEqual(['add', 'checkout']);
   });
 
   it('never accepts a cart edit that is missing from the order placed concurrently', async () => {

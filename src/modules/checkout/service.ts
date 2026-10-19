@@ -64,7 +64,9 @@ export class CheckoutService {
         .execute();
       if (items.length === 0) throw Errors.cartEmpty(cart.id);
 
-      // 3. Lock every product row we will decrement, in id order (deadlock-free).
+      // 3. Lock every product row we will decrement, in id order (deadlock-free). NO KEY UPDATE
+      // is the strength an UPDATE of non-key columns needs: it still serialises checkouts, but
+      // does not block shoppers whose add-to-cart takes a KEY SHARE lock via the foreign key.
       const products = await trx
         .selectFrom('products')
         .selectAll()
@@ -74,7 +76,7 @@ export class CheckoutService {
           items.map((i) => i.product_id),
         )
         .orderBy('id')
-        .forUpdate()
+        .forNoKeyUpdate()
         .execute();
       await this.hooks.afterProductsLocked?.();
       const productById = new Map(products.map((p) => [p.id, p]));
