@@ -1,11 +1,20 @@
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUi from '@fastify/swagger-ui';
 import Fastify, { type FastifyInstance } from 'fastify';
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type { AppConfig } from './config.js';
 import type { Db } from './db/database.js';
+import { AppError } from './domain/errors.js';
+import { toProblem } from './http/problem.js';
+import { cartRoutes } from './modules/carts/routes.js';
+import { CartService } from './modules/carts/service.js';
+import { productRoutes } from './modules/products/routes.js';
+import { ProductService } from './modules/products/service.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -18,7 +27,51 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  app.get('/health', async () => ({ status: 'ok' }));
+  app.setErrorHandler((error, request, reply) => {
+    const problem = toProblem(error, request.url);
+    if (problem.status >= 500 && !(error instanceof AppError)) {
+      request.log.error({ err: error }, 'request failed');
+    }
+    if (problem.status === 503) reply.header('Retry-After', '1');
+    return reply.status(problem.status).type('application/problem+json').send(problem);
+  });
+  app.setNotFoundHandler((request, reply) =>
+    reply
+      .status(404)
+      .type('application/problem+json')
+      .send({
+        type: '/problems/route-not-found',
+        title: 'Route not found',
+        status: 404,
+        detail: `No route for ${request.method} ${request.url}`,
+        code: 'ROUTE_NOT_FOUND',
+      }),
+  );
+
+  await app.register(fastifySwagger, {
+    openapi: {
+      info: {
+        title: 'Reliable Checkout and Rewards API',
+        version: '1.0.0',
+        description:
+          'Money is integer paise (INR). Errors are application/problem+json with a stable `code`. Routes under /admin are administrative.',
+      },
+      tags: [
+        { name: 'catalogue' },
+        { name: 'cart' },
+        { name: 'checkout' },
+        { name: 'orders' },
+        { name: 'admin', description: 'Administrative operations (no auth in this exercise)' },
+      ],
+    },
+    transform: jsonSchemaTransform,
+  });
+  await app.register(fastifySwaggerUi, { routePrefix: '/docs' });
+
+  app.get('/health', { schema: { hide: true } }, async () => ({ status: 'ok' }));
+
+  await app.register(productRoutes(new ProductService(deps.db)));
+  await app.register(cartRoutes(new CartService(deps.db)));
 
   return app;
 }
