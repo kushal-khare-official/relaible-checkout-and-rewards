@@ -5,8 +5,7 @@ import {
   createCart,
   createHarness,
   json,
-  resetDatabase,
-  sleep,
+  resetHarness,
   statusCounts,
   stockOf,
   type TestHarness,
@@ -18,12 +17,7 @@ beforeAll(async () => {
   h = await createHarness();
 });
 afterAll(async () => h.close());
-beforeEach(async () => {
-  await resetDatabase(h.db);
-  // Hold the product locks for a while so concurrent checkouts genuinely overlap. A
-  // read-check-write implementation without row locks oversells reliably under this hook.
-  h.hooks.afterProductsLocked = () => sleep(25);
-});
+beforeEach(async () => resetHarness(h));
 
 describe('concurrent checkouts never oversell', () => {
   it('sells exactly the 3 limited sneakers to 10 simultaneous buyers', async () => {

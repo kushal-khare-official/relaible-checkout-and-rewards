@@ -26,12 +26,17 @@ function fromAppError(error: AppError, instance?: string): ProblemBody {
   };
 }
 
-// Backstops: the services' locks make these unreachable, but if a constraint ever fires we
-// still answer with the domain error rather than a 500.
+// Backstops: the services' locks and compare-and-set updates make these unreachable, but if a
+// code path ever skips them the constraint still refuses the write and the client gets the
+// domain error rather than a 500. (Verified by removing the coupon CAS: the race test still
+// passes because orders_coupon_code_key rejects the second redemption.)
 const UNIQUE_VIOLATIONS: Record<string, () => AppError> = {
-  orders_cart_id_key: () => Errors.cartAlreadyCheckedOut('(unknown)', null),
-  orders_coupon_code_key: () => Errors.couponAlreadyRedeemed('(unknown)'),
-  coupons_redeemed_order_id_key: () => Errors.couponAlreadyRedeemed('(unknown)'),
+  orders_cart_id_key: () =>
+    new AppError('CART_ALREADY_CHECKED_OUT', 409, 'Cart has already been checked out'),
+  orders_coupon_code_key: () =>
+    new AppError('COUPON_ALREADY_REDEEMED', 409, 'Coupon has already been redeemed'),
+  coupons_redeemed_order_id_key: () =>
+    new AppError('COUPON_ALREADY_REDEEMED', 409, 'Coupon has already been redeemed'),
 };
 
 const RETRYABLE_PG_CODES = new Set([

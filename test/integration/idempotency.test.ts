@@ -5,8 +5,7 @@ import {
   createCart,
   createHarness,
   json,
-  resetDatabase,
-  sleep,
+  resetHarness,
   statusCounts,
   stockOf,
   type TestHarness,
@@ -18,12 +17,7 @@ beforeAll(async () => {
   h = await createHarness();
 });
 afterAll(async () => h.close());
-beforeEach(async () => {
-  await resetDatabase(h.db);
-  h.payments.declineReason = null;
-  h.payments.charges.length = 0;
-  h.hooks.afterProductsLocked = () => sleep(25);
-});
+beforeEach(async () => resetHarness(h));
 
 describe('checkout retries', () => {
   it('turns a storm of identical retries into exactly one order and one charge', async () => {
@@ -76,7 +70,7 @@ describe('checkout retries', () => {
 
   it('does not consume the key, stock or anything else when payment is declined', async () => {
     const cartId = await createCart(h.app, { 'sneaker-ltd': 1 });
-    h.payments.declineReason = 'insufficient_funds';
+    h.payments.decline = () => 'insufficient_funds';
 
     const declined = await checkout(h.app, cartId, 'pay-attempt-1');
     expect(declined.statusCode).toBe(402);
@@ -89,7 +83,7 @@ describe('checkout retries', () => {
     expect(await countRows(h.db, 'idempotency_keys')).toBe(0);
 
     // Same key retried once the customer fixes their payment method: it now succeeds.
-    h.payments.declineReason = null;
+    h.payments.decline = () => null;
     const retried = await checkout(h.app, cartId, 'pay-attempt-1');
     expect(retried.statusCode).toBe(201);
     expect(retried.headers['idempotent-replayed']).toBeUndefined();

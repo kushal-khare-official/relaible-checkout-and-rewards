@@ -13,8 +13,8 @@ export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(r
 export interface TestHarness {
   app: FastifyInstance;
   db: Db;
-  /** Set to a reason string to make the next charges decline. */
-  payments: { declineReason: string | null; charges: ChargeRequest[] };
+  /** Return a reason to decline a charge, null to approve. Every attempt is recorded. */
+  payments: { decline: (request: ChargeRequest) => string | null; charges: ChargeRequest[] };
   /** Mutable so a test can widen race windows only where it needs to. */
   hooks: CheckoutHooks;
   close(): Promise<void>;
@@ -37,11 +37,11 @@ export async function createHarness(
     logLevel: 'silent',
   };
   const db = createDb({ connectionString, max: config.dbPoolMax });
-  const payments: TestHarness['payments'] = { declineReason: null, charges: [] };
+  const payments: TestHarness['payments'] = { decline: () => null, charges: [] };
   const gateway = new FakePaymentGateway({
     decline: (request) => {
       payments.charges.push(request);
-      return payments.declineReason;
+      return payments.decline(request);
     },
   });
   const hooks: CheckoutHooks = {};
@@ -64,6 +64,15 @@ export async function createHarness(
       await db.destroy();
     },
   };
+}
+
+export async function resetHarness(h: TestHarness): Promise<void> {
+  await resetDatabase(h.db);
+  h.payments.decline = () => null;
+  h.payments.charges.length = 0;
+  // Hold product locks briefly so concurrent checkouts genuinely overlap. A read-check-write
+  // implementation without row locks oversells reliably under this hook.
+  h.hooks.afterProductsLocked = () => sleep(25);
 }
 
 export async function resetDatabase(db: Db): Promise<void> {
@@ -107,6 +116,12 @@ export function checkout(
   });
 }
 
+export async function generateCoupon(app: FastifyInstance): Promise<string> {
+  const res = await app.inject({ method: 'POST', url: '/admin/coupons' });
+  if (res.statusCode !== 201) throw new Error(`coupon generation failed: ${res.body}`);
+  return json(res).code;
+}
+
 /** Places `count` one-sticker orders sequentially (used to reach reward milestones). */
 export async function placeOrders(app: FastifyInstance, count: number): Promise<string[]> {
   const ids: string[] = [];
@@ -128,10 +143,10 @@ export async function stockOf(db: Db, productId: string): Promise<number> {
   return row.stock;
 }
 
-export async function countRows(
-  db: Db,
-  table: 'orders' | 'coupons' | 'idempotency_keys' | 'order_items' | 'carts',
-): Promise<number> {
+export type TableName =
+  'orders' | 'coupons' | 'idempotency_keys' | 'order_items' | 'carts' | 'cart_items' | 'products';
+
+export async function countRows(db: Db, table: TableName): Promise<number> {
   const row = await db
     .selectFrom(table)
     .select((eb) => eb.fn.countAll<number>().as('n'))
