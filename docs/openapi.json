@@ -1,0 +1,3991 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Reliable Checkout and Rewards API",
+    "version": "1.0.0",
+    "description": "Money is integer paise (INR). Errors are application/problem+json with a stable `code`. Routes under /admin are administrative."
+  },
+  "components": {
+    "schemas": {}
+  },
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "List products with current price and stock",
+        "tags": [
+          "catalogue"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "stock": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "unitPricePaise",
+                          "stock",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{productId}": {
+      "get": {
+        "summary": "Get one product",
+        "tags": [
+          "catalogue"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,64}$"
+            },
+            "in": "path",
+            "name": "productId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "unitPricePaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "stock": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "unitPricePaise",
+                    "stock",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts": {
+      "post": {
+        "summary": "Create an empty cart",
+        "tags": [
+          "cart"
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "CHECKED_OUT"
+                      ]
+                    },
+                    "orderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "acknowledgedUnitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "priceChanged": {
+                            "type": "boolean"
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "availableStock": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sufficientStock": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantity",
+                          "unitPricePaise",
+                          "acknowledgedUnitPricePaise",
+                          "priceChanged",
+                          "lineTotalPaise",
+                          "availableStock",
+                          "sufficientStock"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "itemCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "PRICE_CHANGED"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "acknowledgedUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              },
+                              "currentUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "acknowledgedUnitPricePaise",
+                              "currentUnitPricePaise"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "INSUFFICIENT_INVENTORY"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "requested": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "requested",
+                              "available"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "checkoutReady": {
+                      "type": "boolean"
+                    },
+                    "couponPreview": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "APPLICABLE",
+                            "NOT_FOUND",
+                            "ALREADY_REDEEMED"
+                          ]
+                        },
+                        "discountPercent": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "discountPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        },
+                        "estimatedTotalPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "status",
+                        "discountPercent",
+                        "discountPaise",
+                        "estimatedTotalPaise"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "orderId",
+                    "currency",
+                    "items",
+                    "itemCount",
+                    "subtotalPaise",
+                    "issues",
+                    "checkoutReady",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}": {
+      "get": {
+        "summary": "View a cart with live prices, totals and checkout readiness",
+        "tags": [
+          "cart"
+        ],
+        "description": "Side-effect free. Pass ?couponCode= to preview a discount (nothing is reserved).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "couponCode",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "cartId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "CHECKED_OUT"
+                      ]
+                    },
+                    "orderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "acknowledgedUnitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "priceChanged": {
+                            "type": "boolean"
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "availableStock": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sufficientStock": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantity",
+                          "unitPricePaise",
+                          "acknowledgedUnitPricePaise",
+                          "priceChanged",
+                          "lineTotalPaise",
+                          "availableStock",
+                          "sufficientStock"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "itemCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "PRICE_CHANGED"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "acknowledgedUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              },
+                              "currentUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "acknowledgedUnitPricePaise",
+                              "currentUnitPricePaise"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "INSUFFICIENT_INVENTORY"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "requested": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "requested",
+                              "available"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "checkoutReady": {
+                      "type": "boolean"
+                    },
+                    "couponPreview": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "APPLICABLE",
+                            "NOT_FOUND",
+                            "ALREADY_REDEEMED"
+                          ]
+                        },
+                        "discountPercent": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "discountPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        },
+                        "estimatedTotalPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "status",
+                        "discountPercent",
+                        "discountPaise",
+                        "estimatedTotalPaise"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "orderId",
+                    "currency",
+                    "items",
+                    "itemCount",
+                    "subtotalPaise",
+                    "issues",
+                    "checkoutReady",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/items": {
+      "post": {
+        "summary": "Add units of a product (adds to an existing line)",
+        "tags": [
+          "cart"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]{1,64}$"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Whole units, 1-100. Use DELETE to remove a line."
+                  }
+                },
+                "required": [
+                  "productId",
+                  "quantity"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "cartId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "CHECKED_OUT"
+                      ]
+                    },
+                    "orderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "acknowledgedUnitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "priceChanged": {
+                            "type": "boolean"
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "availableStock": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sufficientStock": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantity",
+                          "unitPricePaise",
+                          "acknowledgedUnitPricePaise",
+                          "priceChanged",
+                          "lineTotalPaise",
+                          "availableStock",
+                          "sufficientStock"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "itemCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "PRICE_CHANGED"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "acknowledgedUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              },
+                              "currentUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "acknowledgedUnitPricePaise",
+                              "currentUnitPricePaise"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "INSUFFICIENT_INVENTORY"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "requested": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "requested",
+                              "available"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "checkoutReady": {
+                      "type": "boolean"
+                    },
+                    "couponPreview": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "APPLICABLE",
+                            "NOT_FOUND",
+                            "ALREADY_REDEEMED"
+                          ]
+                        },
+                        "discountPercent": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "discountPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        },
+                        "estimatedTotalPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "status",
+                        "discountPercent",
+                        "discountPaise",
+                        "estimatedTotalPaise"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "orderId",
+                    "currency",
+                    "items",
+                    "itemCount",
+                    "subtotalPaise",
+                    "issues",
+                    "checkoutReady",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/items/{productId}": {
+      "put": {
+        "summary": "Set the quantity of a line (creates it if absent; idempotent)",
+        "tags": [
+          "cart"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Whole units, 1-100. Use DELETE to remove a line."
+                  }
+                },
+                "required": [
+                  "quantity"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "cartId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,64}$"
+            },
+            "in": "path",
+            "name": "productId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "CHECKED_OUT"
+                      ]
+                    },
+                    "orderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "acknowledgedUnitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "priceChanged": {
+                            "type": "boolean"
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "availableStock": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sufficientStock": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantity",
+                          "unitPricePaise",
+                          "acknowledgedUnitPricePaise",
+                          "priceChanged",
+                          "lineTotalPaise",
+                          "availableStock",
+                          "sufficientStock"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "itemCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "PRICE_CHANGED"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "acknowledgedUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              },
+                              "currentUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "acknowledgedUnitPricePaise",
+                              "currentUnitPricePaise"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "INSUFFICIENT_INVENTORY"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "requested": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "requested",
+                              "available"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "checkoutReady": {
+                      "type": "boolean"
+                    },
+                    "couponPreview": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "APPLICABLE",
+                            "NOT_FOUND",
+                            "ALREADY_REDEEMED"
+                          ]
+                        },
+                        "discountPercent": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "discountPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        },
+                        "estimatedTotalPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "status",
+                        "discountPercent",
+                        "discountPaise",
+                        "estimatedTotalPaise"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "orderId",
+                    "currency",
+                    "items",
+                    "itemCount",
+                    "subtotalPaise",
+                    "issues",
+                    "checkoutReady",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a line (idempotent)",
+        "tags": [
+          "cart"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "cartId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,64}$"
+            },
+            "in": "path",
+            "name": "productId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "CHECKED_OUT"
+                      ]
+                    },
+                    "orderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "acknowledgedUnitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "priceChanged": {
+                            "type": "boolean"
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "availableStock": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sufficientStock": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantity",
+                          "unitPricePaise",
+                          "acknowledgedUnitPricePaise",
+                          "priceChanged",
+                          "lineTotalPaise",
+                          "availableStock",
+                          "sufficientStock"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "itemCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "PRICE_CHANGED"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "acknowledgedUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              },
+                              "currentUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "acknowledgedUnitPricePaise",
+                              "currentUnitPricePaise"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "INSUFFICIENT_INVENTORY"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "requested": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "requested",
+                              "available"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "checkoutReady": {
+                      "type": "boolean"
+                    },
+                    "couponPreview": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "APPLICABLE",
+                            "NOT_FOUND",
+                            "ALREADY_REDEEMED"
+                          ]
+                        },
+                        "discountPercent": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "discountPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        },
+                        "estimatedTotalPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "status",
+                        "discountPercent",
+                        "discountPaise",
+                        "estimatedTotalPaise"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "orderId",
+                    "currency",
+                    "items",
+                    "itemCount",
+                    "subtotalPaise",
+                    "issues",
+                    "checkoutReady",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/acknowledge-prices": {
+      "post": {
+        "summary": "Accept current catalogue prices for every line",
+        "tags": [
+          "cart"
+        ],
+        "description": "Call after a PRICE_CHANGED response (or when the cart view shows priceChanged). Checkout charges only acknowledged prices.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "cartId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "CHECKED_OUT"
+                      ]
+                    },
+                    "orderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "acknowledgedUnitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "priceChanged": {
+                            "type": "boolean"
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "availableStock": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "sufficientStock": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantity",
+                          "unitPricePaise",
+                          "acknowledgedUnitPricePaise",
+                          "priceChanged",
+                          "lineTotalPaise",
+                          "availableStock",
+                          "sufficientStock"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "itemCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "PRICE_CHANGED"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "acknowledgedUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              },
+                              "currentUnitPricePaise": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991,
+                                "description": "Integer amount in paise (INR minor units)"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "acknowledgedUnitPricePaise",
+                              "currentUnitPricePaise"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "enum": [
+                                  "INSUFFICIENT_INVENTORY"
+                                ]
+                              },
+                              "productId": {
+                                "type": "string"
+                              },
+                              "requested": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "productId",
+                              "requested",
+                              "available"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "checkoutReady": {
+                      "type": "boolean"
+                    },
+                    "couponPreview": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "APPLICABLE",
+                            "NOT_FOUND",
+                            "ALREADY_REDEEMED"
+                          ]
+                        },
+                        "discountPercent": {
+                          "nullable": true,
+                          "type": "number"
+                        },
+                        "discountPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        },
+                        "estimatedTotalPaise": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Integer amount in paise (INR minor units)"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "status",
+                        "discountPercent",
+                        "discountPaise",
+                        "estimatedTotalPaise"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status",
+                    "orderId",
+                    "currency",
+                    "items",
+                    "itemCount",
+                    "subtotalPaise",
+                    "issues",
+                    "checkoutReady",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/checkout": {
+      "post": {
+        "summary": "Check out a cart, optionally with a coupon",
+        "tags": [
+          "checkout"
+        ],
+        "description": "Requires an `Idempotency-Key` header (1-255 chars, e.g. a UUID generated per checkout attempt).\n\nRetrying with the same key and body returns the original 201 response with `Idempotent-Replayed: true`.\n\nReusing a key for a different cart or coupon returns 422 IDEMPOTENCY_KEY_REUSED.\n\nFailed attempts consume nothing (no stock, no coupon, no key) and may be retried with the same key.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "nullable": true,
+                "type": "object",
+                "properties": {
+                  "couponCode": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "cartId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "cartId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PLACED"
+                      ]
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "productName": {
+                            "type": "string",
+                            "description": "Snapshot at checkout"
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Snapshot at checkout"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "productName",
+                          "unitPricePaise",
+                          "quantity",
+                          "lineTotalPaise"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "coupon": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "discountBps": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "discountPercent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "discountBps",
+                        "discountPercent"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "discountPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "floor(subtotal * discountBps / 10000)"
+                    },
+                    "totalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "subtotal - discount"
+                    },
+                    "paymentReference": {
+                      "type": "string"
+                    },
+                    "placedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "cartId",
+                    "status",
+                    "currency",
+                    "items",
+                    "subtotalPaise",
+                    "coupon",
+                    "discountPaise",
+                    "totalPaise",
+                    "paymentReference",
+                    "placedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "summary": "Get an order with its line and pricing snapshot",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orderId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "cartId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PLACED"
+                      ]
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "productName": {
+                            "type": "string",
+                            "description": "Snapshot at checkout"
+                          },
+                          "unitPricePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Snapshot at checkout"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "lineTotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "productName",
+                          "unitPricePaise",
+                          "quantity",
+                          "lineTotalPaise"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "subtotalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "coupon": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "discountBps": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "discountPercent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "discountBps",
+                        "discountPercent"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "discountPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "floor(subtotal * discountBps / 10000)"
+                    },
+                    "totalPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "subtotal - discount"
+                    },
+                    "paymentReference": {
+                      "type": "string"
+                    },
+                    "placedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "cartId",
+                    "status",
+                    "currency",
+                    "items",
+                    "subtotalPaise",
+                    "coupon",
+                    "discountPaise",
+                    "totalPaise",
+                    "paymentReference",
+                    "placedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/coupons": {
+      "post": {
+        "summary": "Generate the coupon for the oldest unrewarded order milestone",
+        "tags": [
+          "admin"
+        ],
+        "description": "Creates at most one coupon per call. 409 NO_ELIGIBLE_MILESTONE (with nextMilestoneAt) when every reached milestone already has a coupon.",
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "AVAILABLE",
+                        "REDEEMED"
+                      ]
+                    },
+                    "discountBps": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "discountPercent": {
+                      "type": "number"
+                    },
+                    "milestoneIndex": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "milestoneOrderCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "redeemedOrderId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "redeemedAt": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "status",
+                    "discountBps",
+                    "discountPercent",
+                    "milestoneIndex",
+                    "milestoneOrderCount",
+                    "redeemedOrderId",
+                    "createdAt",
+                    "redeemedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List coupons",
+        "tags": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "AVAILABLE",
+                "REDEEMED"
+              ]
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "AVAILABLE",
+                              "REDEEMED"
+                            ]
+                          },
+                          "discountBps": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "discountPercent": {
+                            "type": "number"
+                          },
+                          "milestoneIndex": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "milestoneOrderCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "redeemedOrderId": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "redeemedAt": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "status",
+                          "discountBps",
+                          "discountPercent",
+                          "milestoneIndex",
+                          "milestoneOrderCount",
+                          "redeemedOrderId",
+                          "createdAt",
+                          "redeemedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/orders": {
+      "get": {
+        "summary": "List placed orders (oldest first)",
+        "tags": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 0,
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "cartId": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "PLACED"
+                            ]
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "productId": {
+                                  "type": "string"
+                                },
+                                "productName": {
+                                  "type": "string",
+                                  "description": "Snapshot at checkout"
+                                },
+                                "unitPricePaise": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991,
+                                  "description": "Snapshot at checkout"
+                                },
+                                "quantity": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "lineTotalPaise": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991,
+                                  "description": "Integer amount in paise (INR minor units)"
+                                }
+                              },
+                              "required": [
+                                "productId",
+                                "productName",
+                                "unitPricePaise",
+                                "quantity",
+                                "lineTotalPaise"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "subtotalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          },
+                          "coupon": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "discountBps": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "discountPercent": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "discountBps",
+                              "discountPercent"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "discountPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "floor(subtotal * discountBps / 10000)"
+                          },
+                          "totalPaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "subtotal - discount"
+                          },
+                          "paymentReference": {
+                            "type": "string"
+                          },
+                          "placedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "cartId",
+                          "status",
+                          "currency",
+                          "items",
+                          "subtotalPaise",
+                          "coupon",
+                          "discountPaise",
+                          "totalPaise",
+                          "paymentReference",
+                          "placedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total",
+                    "limit",
+                    "offset"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/report": {
+      "get": {
+        "summary": "Sales and rewards summary (read-only, single consistent snapshot)",
+        "tags": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currency": {
+                      "type": "string"
+                    },
+                    "totalOrders": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "grossRevenuePaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Sum of order subtotals, before discounts"
+                    },
+                    "totalDiscountsPaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Sum of discounts applied to placed orders"
+                    },
+                    "netRevenuePaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "gross - discounts = sum of order totals"
+                    },
+                    "products": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "quantitySold": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "grossRevenuePaise": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "description": "Integer amount in paise (INR minor units)"
+                          }
+                        },
+                        "required": [
+                          "productId",
+                          "name",
+                          "quantitySold",
+                          "grossRevenuePaise"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "coupons": {
+                      "type": "object",
+                      "properties": {
+                        "generated": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "available": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "redeemed": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "generated",
+                        "available",
+                        "redeemed"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rewards": {
+                      "type": "object",
+                      "properties": {
+                        "everyNOrders": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "discountPercent": {
+                          "type": "number"
+                        },
+                        "rewardedMilestones": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "nextMilestoneAt": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "eligibleUnrewardedMilestones": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "everyNOrders",
+                        "discountPercent",
+                        "rewardedMilestones",
+                        "nextMilestoneAt",
+                        "eligibleUnrewardedMilestones"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "currency",
+                    "totalOrders",
+                    "grossRevenuePaise",
+                    "totalDiscountsPaise",
+                    "netRevenuePaise",
+                    "products",
+                    "coupons",
+                    "rewards"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/products/{productId}": {
+      "patch": {
+        "summary": "Change a price and/or adjust stock by a signed delta",
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pricePaise": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000000
+                  },
+                  "stockAdjustment": {
+                    "type": "integer",
+                    "minimum": -1000000,
+                    "maximum": 1000000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,64}$"
+            },
+            "in": "path",
+            "name": "productId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "unitPricePaise": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Integer amount in paise (INR minor units)"
+                    },
+                    "stock": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "unitPricePaise",
+                    "stock",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ],
+                  "additionalProperties": {},
+                  "description": "RFC 9457 problem details; `code` is stable, extra members carry structured detail"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "catalogue"
+    },
+    {
+      "name": "cart"
+    },
+    {
+      "name": "checkout"
+    },
+    {
+      "name": "orders"
+    },
+    {
+      "name": "admin",
+      "description": "Administrative operations (no auth in this exercise)"
+    }
+  ]
+}

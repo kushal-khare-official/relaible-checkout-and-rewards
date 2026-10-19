@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "openapi": "tsx scripts/export-openapi.ts",
+    "demo": "bash scripts/demo.sh"
   },
   "dependencies": {
     "@fastify/static": "^10.1.6",
