@@ -12,13 +12,20 @@ import type { Db } from './db/database.js';
 import { AppError } from './domain/errors.js';
 import { toProblem } from './http/problem.js';
 import { cartRoutes } from './modules/carts/routes.js';
+import { checkoutRoutes } from './modules/checkout/routes.js';
+import { CheckoutService, type CheckoutHooks } from './modules/checkout/service.js';
+import { orderRoutes } from './modules/orders/routes.js';
+import { OrderService } from './modules/orders/service.js';
 import { CartService } from './modules/carts/service.js';
 import { productRoutes } from './modules/products/routes.js';
 import { ProductService } from './modules/products/service.js';
+import { FakePaymentGateway, type PaymentGateway } from './payments/gateway.js';
 
 export interface AppDeps {
   config: AppConfig;
   db: Db;
+  paymentGateway?: PaymentGateway;
+  checkoutHooks?: CheckoutHooks;
   logger?: boolean | { level: string };
 }
 
@@ -72,6 +79,9 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
 
   await app.register(productRoutes(new ProductService(deps.db)));
   await app.register(cartRoutes(new CartService(deps.db)));
+  const payments = deps.paymentGateway ?? new FakePaymentGateway();
+  await app.register(checkoutRoutes(new CheckoutService(deps.db, payments, deps.checkoutHooks)));
+  await app.register(orderRoutes(new OrderService(deps.db)));
 
   return app;
 }
